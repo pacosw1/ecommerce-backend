@@ -2,19 +2,20 @@ package models
 
 import (
 	"errors"
+	"time"
 )
 
 var ErrNoRecord = errors.New("models: no matching record found")
 
 //Product stores product data
 type Product struct {
-	ID          string  `validate:"omitempty"`
-	Name        string  `validate:"required" ` //required
-	Stock       uint16  `validate:"required"`  //required
-	Description string  `validate:"required"`  //required
-	Price       float32 `validate:"required"`  //required
-	SalePrice   float32 `validate:"omitempty"`
-	Created     int32   `validate:"omitempty"`
+	ID          string    `validate:"omitempty"`
+	Name        string    `validate:"required" ` //required
+	Stock       uint16    `validate:"required"`  //required
+	Description string    `validate:"required"`  //required
+	Price       float32   `validate:"required"`  //required
+	SalePrice   float32   `validate:"omitempty"`
+	Created     time.Time `validate:"omitempty"`
 	// Images      []string `json:"images"` //required
 	// Tags        []string `json:"tags,omitempty"`
 }

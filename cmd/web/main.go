@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
-	"project-z/pkg/models/mysql"
+	"project-z/cmd/mysql"
 
 	_ "github.com/go-sql-driver/mysql" // New import
 )

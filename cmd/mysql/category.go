@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"database/sql"
-	"project-z/pkg/models"
+	"project-z/cmd/models"
 )
 
 //CategoryModel type which wraps a sql.DB connection pool.

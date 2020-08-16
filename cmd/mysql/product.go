@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"mime/multipart"
-	saver "project-z/pkg/image-saver"
-	"project-z/pkg/models"
+	saver "project-z/cmd/image-saver"
+	"project-z/cmd/models"
+	"strings"
 )
 
 //ProductModel type which wraps a sql.DB connection pool.
@@ -137,17 +138,17 @@ func (m *ProductModel) Search(name string) ([]*models.Product, error) {
 
 	// searchRes := []*ProductSearch{}
 
-	fmt.Print(results)
-
 	for _, product := range results {
 		res := ProductSearch{}
 		res.Name = product.Name
-		row := m.DB.QueryRow("SELECT path FROM images WHERE thumbnail = true")
+		row := m.DB.QueryRow("SELECT path FROM images WHERE thumbnail = ? AND productId = ?", true, product.ID)
 
 		var path string
 		row.Scan(&path)
 
-		fmt.Print(row)
+		url := strings.Split(path, "/")
+
+		fmt.Print(url)
 
 	}
 

@@ -1,6 +1,6 @@
 package main
 
-import "project-z/pkg/models/mysql"
+import "project-z/cmd/mysql"
 
 //Models wrapper to group all model dependencies in one place
 type Models struct {

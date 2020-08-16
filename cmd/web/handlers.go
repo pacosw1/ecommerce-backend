@@ -5,8 +5,8 @@ import (
 	"fmt"
 	_ "image/png"
 	"net/http"
-	saver "project-z/pkg/image-saver"
-	"project-z/pkg/models"
+	saver "project-z/cmd/image-saver"
+	"project-z/cmd/models"
 
 	"github.com/go-playground/validator"
 	"github.com/gorilla/schema"

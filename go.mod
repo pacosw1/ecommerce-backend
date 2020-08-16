@@ -3,6 +3,7 @@ module project-z
 go 1.15
 
 require (
+	github.com/aws/aws-sdk-go v1.29.15
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
