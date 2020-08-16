@@ -8,12 +8,12 @@ var ErrNoRecord = errors.New("models: no matching record found")
 
 //Product stores product data
 type Product struct {
-	Name        string  `json:"name"`        //required
-	Stock       uint16  `json:"stock"`       //required
-	Description string  `json:"description"` //required
-	Price       float32 `json:"price"`       //required
-	SalePrice   float32 `json:"salePrice,omitempty"`
-	Created     int32   `json:"created,omitempty"`
+	Name        string  `validate:"required" ` //required
+	Stock       uint16  `validate:"required"`  //required
+	Description string  `validate:"required"`  //required
+	Price       float32 `validate:"required"`  //required
+	SalePrice   float32 `validate:"omitempty"`
+	Created     int32   `validate:"omitempty"`
 	// Images      []string `json:"images"` //required
 	// Tags        []string `json:"tags,omitempty"`
 }

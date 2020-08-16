@@ -15,6 +15,8 @@ func main() {
 	//add command line flag to setup port dynamically
 	addr := flag.Int("port", 4000, "HTTP network address")
 
+	dsn := flag.String("dsn", "admin:o23pvfhs@/project_zilo?parseTime=true", "MySQL data source name")
+
 	//make sure flags are valid
 	flag.Parse()
 
