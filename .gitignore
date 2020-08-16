@@ -1,2 +1,4 @@
 
 ./cmd/static/images/*.jpg
+
+*.jpg
