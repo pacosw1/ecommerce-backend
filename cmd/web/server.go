@@ -19,11 +19,15 @@ func NewServer() *Server {
 	serv := &Server{}
 	serv.Router = mux.NewRouter()
 
+	//file server for images
+
 	//setup routes for serving
 	serv.Routes()
 
 	return serv
 }
+
+//ServeFiles serves static directory
 
 //Listen serves to start listing for requests on selected Port
 func (s *Server) Listen(port int) error {

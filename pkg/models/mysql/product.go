@@ -44,6 +44,13 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	//try to save images to disk and return paths to store in DB
 	paths, err := saver.SaveImagesToDisk("static/images", images)
 
+	if err != nil {
+		transaction.Rollback()
+		//removes images stored since transaction failed
+		saver.CleanUp(paths)
+		return err
+	}
+
 	var values []interface{}
 	imageQuery := `INSERT INTO images (productId, path) VALUES `
 
@@ -60,6 +67,8 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	result, err = transaction.Exec(imageQuery, values...)
 
 	if err != nil {
+		//removes images stored since transaction failed
+		saver.CleanUp(paths)
 		transaction.Rollback()
 		return err
 	}
@@ -68,6 +77,8 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	err = transaction.Commit()
 
 	if err != nil {
+		//removes images stored since transaction failed
+		saver.CleanUp(paths)
 		transaction.Rollback()
 		return err
 	}
