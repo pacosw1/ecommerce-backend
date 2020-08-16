@@ -43,23 +43,29 @@ func WriteImg(path string, img image.Image) (bool, error) {
 }
 
 //SaveImagesToDisk takes in http file header, optimizes and saves them to disk
-func SaveImagesToDisk(directory string, files []*multipart.FileHeader) ([]string, error) {
+func SaveImagesToDisk(directory string, files []*multipart.FileHeader, thumbnail string) (string, []string, error) {
 
 	var paths []string
+
+	primaryPath := ""
 
 	for _, header := range files {
 
 		//save image to given dir and return its saved path
-		path, err := SaveImage(header, directory)
+		display, path, err := SaveImage(header, directory, thumbnail)
 
 		if err != nil {
-			return nil, err
+			return "", nil, err
+		}
+
+		if display {
+			primaryPath = path
 		}
 
 		paths = append(paths, path)
 	}
 
-	return paths, nil
+	return primaryPath, paths, nil
 
 }
 
@@ -106,13 +112,15 @@ func CleanUp(paths []string) error {
 }
 
 //SaveImage saves image into specified directory
-func SaveImage(header *multipart.FileHeader, directory string) (string, error) {
+func SaveImage(header *multipart.FileHeader, directory string, thumbnail string) (bool, string, error) {
+
+	isThumbNail := thumbnail == header.Filename
 
 	//open file
 	file, err := header.Open()
 
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
 	defer file.Close()
@@ -131,7 +139,7 @@ func SaveImage(header *multipart.FileHeader, directory string) (string, error) {
 	img, _, err := DecodeImage(file)
 
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
 	//resize the image for optimal web size
@@ -145,10 +153,10 @@ func SaveImage(header *multipart.FileHeader, directory string) (string, error) {
 	_, err = WriteImg(path, img)
 
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
-	return path, nil
+	return isThumbNail, path, nil
 }
 
 //DecodeImage decodes image

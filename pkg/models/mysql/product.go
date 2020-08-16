@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 	"mime/multipart"
 	saver "project-z/pkg/image-saver"
 	"project-z/pkg/models"
@@ -13,7 +14,7 @@ type ProductModel struct {
 }
 
 //Insert serves to add a product to the database
-func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) error {
+func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader, thumbnail string) error {
 
 	//start transaction
 	transaction, err := m.DB.Begin()
@@ -42,7 +43,7 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	}
 
 	//try to save images to disk and return paths to store in DB
-	paths, err := saver.SaveImagesToDisk("cmd/static/images", images)
+	primaryPath, paths, err := saver.SaveImagesToDisk("cmd/static/images", images, thumbnail)
 
 	if err != nil {
 		transaction.Rollback()
@@ -52,15 +53,16 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	}
 
 	var values []interface{}
-	imageQuery := `INSERT INTO images (productId, path) VALUES `
+	imageQuery := `INSERT INTO images (thumbnail, productId, path) VALUES `
 
 	for index, path := range paths {
-		row := "(?, ?)"
+
+		row := "(?, ?, ?)"
 		if index < len(paths)-1 {
 			row += ", "
 		}
 		imageQuery += row
-		values = append(values, productID, path)
+		values = append(values, path == primaryPath, productID, path)
 	}
 
 	//execute query
@@ -86,5 +88,69 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	// The ID returned has the type int64, so we convert it to an int type
 	// before returning.
 	return nil
+
+}
+
+//Search searches product by name
+func (m *ProductModel) Search(name string) ([]*models.Product, error) {
+
+	query := "SELECT * FROM products WHERE name LIKE ?"
+
+	keyword := `%` + name + `%`
+
+	rows, err := m.DB.Query(query, keyword)
+
+	if err != nil {
+		fmt.Printf(err.Error())
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var results []*models.Product
+
+	//iterate thru results
+	for rows.Next() {
+
+		p := models.Product{}
+
+		err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SalePrice, &p.Stock, &p.Created)
+
+		if err != nil {
+			fmt.Printf(err.Error())
+			return nil, err
+		}
+
+		results = append(results, &p)
+
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Printf(err.Error())
+		return nil, err
+	}
+
+	type ProductSearch struct {
+		Name      string
+		ImagePath string
+	}
+
+	// searchRes := []*ProductSearch{}
+
+	fmt.Print(results)
+
+	for _, product := range results {
+		res := ProductSearch{}
+		res.Name = product.Name
+		row := m.DB.QueryRow("SELECT path FROM images WHERE thumbnail = true")
+
+		var path string
+		row.Scan(&path)
+
+		fmt.Print(row)
+
+	}
+
+	return results, nil
 
 }

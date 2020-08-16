@@ -8,6 +8,7 @@ var ErrNoRecord = errors.New("models: no matching record found")
 
 //Product stores product data
 type Product struct {
+	ID          string  `validate:"omitempty"`
 	Name        string  `validate:"required" ` //required
 	Stock       uint16  `validate:"required"`  //required
 	Description string  `validate:"required"`  //required

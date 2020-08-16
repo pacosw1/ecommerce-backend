@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	_ "image/png"
 	"net/http"
 	saver "project-z/pkg/image-saver"
@@ -57,6 +58,26 @@ func (s *Server) HandleProductCreate(w http.ResponseWriter, r *http.Request) {
 	//abtract regular json key value pairs
 	decoder.Decode(&product, r.MultipartForm.Value)
 
+	thumbnail := r.FormValue("thumbnail")
+
+	if thumbnail == "" {
+		http.Error(w, "Invalid thumbnail", 400)
+		return
+	}
+
+	exists := false
+	for _, header := range images {
+		if header.Filename == thumbnail {
+			fmt.Print(thumbnail)
+			exists = true
+		}
+	}
+
+	if !exists {
+		http.Error(w, "Make sure selected thumbnail is attached", 400)
+		return
+	}
+
 	err = validate.Struct(product)
 
 	//validation errors
@@ -87,7 +108,7 @@ func (s *Server) HandleProductCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//send validated data to our DB transaction function
-	err = s.Models.Product.Insert(product, images)
+	err = s.Models.Product.Insert(product, images, thumbnail)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -96,4 +117,35 @@ func (s *Server) HandleProductCreate(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode("Save Successfull")
 	return
+}
+
+//HandleProductSearch search for a product based on its name
+func (s *Server) HandleProductSearch(w http.ResponseWriter, r *http.Request) {
+	//set headers to expect json presonse from server
+	w.Header().Set("Content-Type", "application/json")
+
+	//if request is invalid
+	if r.Method != http.MethodGet {
+		//show caller allowed calls to this endpoint
+		w.Header().Set("Allow", http.MethodGet)
+		return
+	}
+
+	r.ParseForm()
+
+	keyword := r.FormValue("keyword")
+
+	if keyword == "" {
+		http.Error(w, "Invalid Keyword", 400)
+		return
+	}
+
+	results, err := s.Models.Product.Search(keyword)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	json.NewEncoder(w).Encode(results)
 }
