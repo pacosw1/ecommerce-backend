@@ -42,7 +42,7 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader) 
 	}
 
 	//try to save images to disk and return paths to store in DB
-	paths, err := saver.SaveImagesToDisk("static/images", images)
+	paths, err := saver.SaveImagesToDisk("cmd/static/images", images)
 
 	if err != nil {
 		transaction.Rollback()

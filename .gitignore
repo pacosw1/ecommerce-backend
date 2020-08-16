@@ -1,5 +1,6 @@
 
 ./cmd/static/images/*.jpg
 
-
 images/*
+
+*.jpg
