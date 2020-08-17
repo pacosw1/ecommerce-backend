@@ -11,6 +11,7 @@ func (s *Server) Routes() {
 	fileServer := http.FileServer(http.Dir("./cmd/"))
 	s.Router.PathPrefix("/static/").Handler(fileServer)
 
+	s.Router.HandleFunc("/products/{id}", s.HandleProductGet).Methods("GET")
 	s.Router.HandleFunc("/products", s.HandleProductCreate).Methods("POST")
 	s.Router.HandleFunc("/search", s.HandleProductSearch).Methods("GET")
 	// s.Router.HandleFunc("/categories", s.HandleProducts)

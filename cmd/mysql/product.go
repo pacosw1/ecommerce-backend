@@ -92,6 +92,32 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader, 
 
 }
 
+//Get gets a product
+func (m *ProductModel) Get(id string) (*models.Product, error) {
+
+	tx, err := m.DB.Begin()
+
+	query := `SELECT * FROM products WHERE id = ?`
+	row := tx.QueryRow(query, id)
+	var p models.Product
+
+	err = row.Scan(&p.Name, &p.Created, &p.Description, &p.ID, &p.Price, &p.SalePrice, &p.Stock)
+
+	if err != nil {
+		tx.Rollback()
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	query = "SELECT * FROM Images WHERE Images.productID = ?"
+	rows, err := tx.Query(query, id)
+	//model images
+
+	return &p, nil
+}
+
 //Search searches product by name
 func (m *ProductModel) Search(name string) ([]*models.Product, error) {
 

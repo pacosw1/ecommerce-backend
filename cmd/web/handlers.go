@@ -8,9 +8,41 @@ import (
 	saver "project-z/cmd/image-saver"
 	"project-z/cmd/models"
 
+	"github.com/gorilla/mux"
+
 	"github.com/go-playground/validator"
 	"github.com/gorilla/schema"
 )
+
+//HandleProductGet get
+func (s *Server) HandleProductGet(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+
+	if id == "" {
+		http.Error(w, "Invalid Product ID", 400)
+		return
+	}
+
+	fmt.Printf(id)
+
+	product, err := s.Models.Product.Get(id)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if product == nil {
+		http.Error(w, "Product with given id not found", 404)
+		return
+	}
+
+	json.NewEncoder(w).Encode(product)
+
+}
 
 //HandleProductCreate serves to create a new product and store it in database
 func (s *Server) HandleProductCreate(w http.ResponseWriter, r *http.Request) {

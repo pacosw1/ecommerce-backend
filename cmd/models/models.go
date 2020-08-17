@@ -16,8 +16,8 @@ type Product struct {
 	Price       float32   `validate:"required"`  //required
 	SalePrice   float32   `validate:"omitempty"`
 	Created     time.Time `validate:"omitempty"`
-	// Images      []string `json:"images"` //required
-	// Tags        []string `json:"tags,omitempty"`
+	Images      []string  `validate:"-"`
+	Tags        []string  `json:"-"`
 }
 
 //Specs serves to calculate shipping price and package dimensions
