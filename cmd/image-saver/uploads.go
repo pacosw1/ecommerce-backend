@@ -96,6 +96,20 @@ func ValidateImageFiles(files []*multipart.FileHeader) error {
 	return nil
 }
 
+//DeleteImages removes images given a relative path as served by file server + root
+func DeleteImages(paths []string) error {
+
+	for _, path := range paths {
+		err := os.Remove(path)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 //CleanUp deletes images from disk if transaction failed
 func CleanUp(paths []string) error {
 

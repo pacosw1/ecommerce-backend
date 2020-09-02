@@ -181,3 +181,34 @@ func (s *Server) HandleProductSearch(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(results)
 }
+
+//HandleProductDelete handles product delete requests
+func (s *Server) HandleProductDelete(w http.ResponseWriter, r *http.Request) {
+	//set headers to expect json presonse from server
+	w.Header().Set("Content-Type", "application/json")
+
+	//if request is invalid
+	if r.Method != http.MethodDelete {
+		//show caller allowed calls to this endpoint
+		w.Header().Set("Allow", http.MethodDelete)
+		return
+	}
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+
+	if id == "" {
+		http.Error(w, "Invalid Product ID", 400)
+		return
+	}
+
+	err := s.Models.Product.Remove(id)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	json.NewEncoder(w).Encode("Product Deleted Successfully")
+}

@@ -95,16 +95,13 @@ func (m *ProductModel) Insert(p models.Product, images []*multipart.FileHeader, 
 //Get gets a product
 func (m *ProductModel) Get(id string) (*models.Product, error) {
 
-	tx, err := m.DB.Begin()
-
-	query := `SELECT * FROM products WHERE id = ?`
-	row := tx.QueryRow(query, id)
+	query := `SELECT * FROM products WHERE productID = ?`
+	row := m.DB.QueryRow(query, id)
 	var p models.Product
 
-	err = row.Scan(&p.Name, &p.Created, &p.Description, &p.ID, &p.Price, &p.SalePrice, &p.Stock)
+	err := row.Scan(&p.ID, &p.Name, &p.Description, &p.Stock, &p.Price, &p.SalePrice, &p.Created)
 
 	if err != nil {
-		tx.Rollback()
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -112,8 +109,35 @@ func (m *ProductModel) Get(id string) (*models.Product, error) {
 	}
 
 	query = "SELECT * FROM Images WHERE Images.productID = ?"
-	rows, err := tx.Query(query, id)
-	//model images
+	rows, err := m.DB.Query(query, id)
+
+	defer rows.Close()
+
+	images := []*models.Image{}
+
+	for rows.Next() {
+
+		var img models.Image
+
+		err = rows.Scan(&img.ImageID, &img.ProductID, &img.Path, &img.Thumbnail)
+		if err != nil {
+			return nil, err
+		}
+
+		url := strings.Split(img.Path, "/")
+		path := strings.Join(url[1:], "/")
+
+		img.Path = path
+
+		images = append(images, &img)
+
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	p.Images = images
 
 	return &p, nil
 }
@@ -128,13 +152,12 @@ func (m *ProductModel) Search(name string) ([]*models.Product, error) {
 	rows, err := m.DB.Query(query, keyword)
 
 	if err != nil {
-		fmt.Printf(err.Error())
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var results []*models.Product
+	results := []*models.Product{}
 
 	//iterate thru results
 	for rows.Next() {
@@ -157,27 +180,98 @@ func (m *ProductModel) Search(name string) ([]*models.Product, error) {
 		return nil, err
 	}
 
-	type ProductSearch struct {
-		Name      string
-		ImagePath string
-	}
+	for _, p := range results {
 
-	// searchRes := []*ProductSearch{}
+		row := m.DB.QueryRow("SELECT * FROM images WHERE thumbnail = ? AND productId = ?", true, p.ID)
 
-	for _, product := range results {
-		res := ProductSearch{}
-		res.Name = product.Name
-		row := m.DB.QueryRow("SELECT path FROM images WHERE thumbnail = ? AND productId = ?", true, product.ID)
+		var img models.Image
 
-		var path string
-		row.Scan(&path)
+		err = row.Scan(&img.ImageID, &img.ProductID, &img.Path, &img.Thumbnail)
 
-		url := strings.Split(path, "/")
+		if err != nil {
+			return nil, err
+		}
 
-		fmt.Print(url)
+		url := strings.Split(img.Path, "/")
+		path := strings.Join(url[1:], "/")
+
+		img.Path = path
+
+		p.Images = append(p.Images, &img)
 
 	}
 
 	return results, nil
+
+}
+
+//Remove removes product from webpage
+func (m *ProductModel) Remove(id string) error {
+
+	tx, err := m.DB.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	query := "SELECT path FROM Images WHERE productID = ?"
+
+	rows, err := tx.Query(query, id)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	defer rows.Close()
+
+	paths := []string{}
+
+	for rows.Next() {
+		var path string
+
+		err = rows.Scan(&path)
+
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		paths = append(paths, path)
+
+	}
+
+	query = "DELETE FROM IMAGES WHERE productID = ?"
+	_, err = tx.Exec(query, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	query = "DELETE FROM Products WHERE productID = ?"
+	_, err = tx.Exec(query, id)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	//if database successfully deleted then transfer images from disk to trash bin
+	err = saver.DeleteImages(paths)
+	if err != nil {
+		//restore images to disk
+		//TODO
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 
 }

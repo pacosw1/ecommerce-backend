@@ -9,15 +9,23 @@ var ErrNoRecord = errors.New("models: no matching record found")
 
 //Product stores product data
 type Product struct {
-	ID          string    `validate:"omitempty"`
-	Name        string    `validate:"required" ` //required
-	Stock       uint16    `validate:"required"`  //required
-	Description string    `validate:"required"`  //required
-	Price       float32   `validate:"required"`  //required
+	ID          int       `validate:"omitempty"`
+	Name        string    `validate:"required"` //required
+	Stock       uint16    `validate:"required"` //required
+	Description string    `validate:"required"` //required
+	Price       float32   `validate:"required"` //required
 	SalePrice   float32   `validate:"omitempty"`
 	Created     time.Time `validate:"omitempty"`
-	Images      []string  `validate:"-"`
+	Images      []*Image  `validate:"-"`
 	Tags        []string  `json:"-"`
+}
+
+//Image stores image sdata
+type Image struct {
+	ImageID   int    `validate:"omitempty"`
+	ProductID int    `validate:"omitempty"`
+	Path      string `validate:"required"`
+	Thumbnail bool   `validate:"required"`
 }
 
 //Specs serves to calculate shipping price and package dimensions

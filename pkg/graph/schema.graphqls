@@ -1,0 +1,19 @@
+type Product {
+  id: ID!
+  name: String!
+  stock: Int!
+  description: String!
+  originalPrice: Float!
+  comparePrice: Float
+  images: [Image!]!
+  created: Int!
+}
+
+type Image {
+  id: ID!
+  path: String!
+}
+
+type Query {
+  products: [Product!]!
+}
